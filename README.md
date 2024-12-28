@@ -1,0 +1,2 @@
+# CCNU_is_cat_project
+一群菜鸡大学生的学习练习用的项目
