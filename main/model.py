@@ -5,31 +5,31 @@ import torch.nn.init as init
 
 class Net(nn.Module):
     '''
-    识别手写字的神经网络
+    监控图像的神经网络,判断是否为猫
     '''
 
     def __init__(self):
         super(Net, self).__init__()
-        # 输入层到第一个隐藏层，将28*28 = 784维的输入映射到200维
-        self.layer1 = nn.Linear(28 * 28, 200)
-        # 第一个隐藏层到第二个隐藏层，将200维映射到100维
-        self.layer2 = nn.Linear(200, 100)
-        # 第二个隐藏层到第三个隐藏层，将100维映射到40维
-        self.layer3 = nn.Linear(100, 40)
-        # 第三个隐藏层到输出层，将40维映射到10维，对应10个类别
-        self.layer4 = nn.Linear(40, 10)
+        # 假设输入为彩色图像，输入通道数为3
+        self.layer1 = nn.Conv2d(in_channels = 3, out_channels = 16, kernel_size=(3, 3))
+        self.layer2 = nn.Conv2d(in_channels = 16, out_channels = 32, kernel_size=(3, 3))
+        self.layer3 = nn.Conv2d(in_channels = 32, out_channels = 64, kernel_size=(3, 3))
+        self.layer4 = nn.Conv2d(in_channels = 64, out_channels = 2, kernel_size=(3, 3))
 
         # 自定义权重初始化
         for m in self.modules():
-            if isinstance(m, nn.Linear):
+            if isinstance(m, nn.Conv2d):
                 init.xavier_uniform_(m.weight)
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
     def forward(self, x):
-        # 将输入数据展平
-        x = x.view(-1, 28 * 28)
-        x = torch.relu(self.layer1(x))  # 使用ReLU激活函数
+        x = torch.relu(self.layer1(x))
         x = torch.relu(self.layer2(x))
         x = torch.relu(self.layer3(x))
-        return self.layer4(x)
+        x = self.layer4(x)
+        # 全局平均池化
+        x = nn.functional.adaptive_avg_pool2d(x, (1, 1))
+        # 将输出展平为一维向量
+        x = x.view(-1, 2)
+        return x
